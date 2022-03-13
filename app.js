@@ -1,13 +1,12 @@
 var express = require("express");
-var http = require("http");
 var bodyParser = require("body-parser");
 var passport = require("passport");
 var authController = require("./auth");
 var jwtController = require("./auth_jwt");
-db = require("./db")();
 var jwt = require("jsonwebtoken");
 var cors = require("cors");
 var exp = require("constants");
+var User = require("./users");
 
 var app = express();
 app.use(cors());
@@ -42,12 +41,23 @@ router
         msg: "Please include both username and password",
       });
     } else {
-      var newUser = {
-        username: req.body.username,
-        password: req.body.password,
-      };
-      db.save(newUser);
-      res.json({ success: true, msg: "Successfully created new user." });
+      var user = new User();
+      user.name = req.body.name;
+      user.username = req.body.username;
+      user.password = req.body.password;
+
+      user.save(function (err) {
+        if (err) {
+          if (err.code == 11000)
+            return res.json({
+              success: false,
+              message: "Duplicate Username!!!",
+            });
+          else return res.json(err);
+        }
+
+        res.json({ success: true, msg: "Successfully created new user." });
+      });
     }
   })
   .all(function (req, res) {
@@ -60,23 +70,28 @@ router
 router
   .route("/signin")
   .post(function (req, res) {
-    var user = db.findOne(req.body.username);
-    if (!user) {
-      res
-        .status(401)
-        .send({ success: false, msg: "Authentication failed, user not found" });
-    } else {
-      if (req.body.password == user.password) {
-        var userToken = { id: user.id, username: user.username };
-        var token = jwt.sign(userToken, process.env.SECRET_KEY);
-        res.json({ success: true, token: "JWT " + token });
-      } else {
-        res.status(401).send({
-          success: false,
-          msg: "Authentication failed, incorrect password",
+    var userNew = new User();
+    userNew.username = req.body.username;
+    userNew.password = req.body.password;
+
+    User.findOne({ username: userNew.username })
+      .select("name username password")
+      .exec(function (err, user) {
+        if (err) res.send(err);
+
+        user.comparePassword(userNew.password, function (isMatch) {
+          if (isMatch) {
+            var userToken = { id: user.id, username: user.username };
+            var token = jwt.sign(userToken, process.env.SECRET_KEY);
+            res.json({ success: true, token: "JWT " + token });
+          } else {
+            res.status(401).send({
+              success: false,
+              msg: "Authentication failed, incorrect password",
+            });
+          }
         });
-      }
-    }
+      });
   })
 
   .all(function (req, res) {
@@ -86,63 +101,63 @@ router
     });
   });
 
-router
-  .route("/movies")
+// router
+//   .route("/movies")
 
-  .get(function (req, res) {
-    res = res.status(200);
-    if (req.get("Content-Type")) {
-      res = res.type(req.get("Content-Type"));
-    }
+//   .get(function (req, res) {
+//     res = res.status(200);
+//     if (req.get("Content-Type")) {
+//       res = res.type(req.get("Content-Type"));
+//     }
 
-    var object = getJSONObject(req, "GET movies");
-    res.json(object);
-  })
+//     var object = getJSONObject(req, "GET movies");
+//     res.json(object);
+//   })
 
-  .post(function (req, res) {
-    res = res.status(200);
-    if (req.get("Content-Type")) {
-      res = res.type(req.get("Content-Type"));
-    }
+//   .post(function (req, res) {
+//     res = res.status(200);
+//     if (req.get("Content-Type")) {
+//       res = res.type(req.get("Content-Type"));
+//     }
 
-    var object = getJSONObject(req, "movie saved");
-    res.json(object);
-  })
+//     var object = getJSONObject(req, "movie saved");
+//     res.json(object);
+//   })
 
-  .delete(authController.isAuthenticated, function (req, res) {
-    console.log(req.body);
-    res = res.status(200);
-    if (req.get("Content-Type")) {
-      res = res.type(req.get("Content-Type"));
-    }
+//   .delete(authController.isAuthenticated, function (req, res) {
+//     console.log(req.body);
+//     res = res.status(200);
+//     if (req.get("Content-Type")) {
+//       res = res.type(req.get("Content-Type"));
+//     }
 
-    var object = getJSONObject(req, "movie deleted");
-    res.json(object);
-  })
-  .put(jwtController.isAuthenticated, function (req, res) {
-    console.log(req.body);
-    res = res.status(200);
-    if (req.get("Content-Type")) {
-      res = res.type(req.get("Content-Type"));
-    }
+//     var object = getJSONObject(req, "movie deleted");
+//     res.json(object);
+//   })
+//   .put(jwtController.isAuthenticated, function (req, res) {
+//     console.log(req.body);
+//     res = res.status(200);
+//     if (req.get("Content-Type")) {
+//       res = res.type(req.get("Content-Type"));
+//     }
 
-    var object = getJSONObject(req, "movie updated");
-    res.json(object);
-  })
+//     var object = getJSONObject(req, "movie updated");
+//     res.json(object);
+//   })
 
-  .all(function (req, res) {
-    res.json({
-      success: false,
-      msg: "Request type must be one of the following: GET, POST, PUT, or DELETE.",
-    });
-  });
+//   .all(function (req, res) {
+//     res.json({
+//       success: false,
+//       msg: "Request type must be one of the following: GET, POST, PUT, or DELETE.",
+//     });
+//   });
 
-router.route("/").all(function (req, res) {
-  res = res.status(401).send({
-    success: false,
-    msg: "Request cannot be made to base address.",
-  });
-});
+// router.route("/").all(function (req, res) {
+//   res = res.status(401).send({
+//     success: false,
+//     msg: "Request cannot be made to base address.",
+//   });
+// });
 
 app.use("/", router);
 app.listen(port, () => console.log(`Listening on port ${port}!`));
