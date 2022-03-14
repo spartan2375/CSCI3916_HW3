@@ -37,7 +37,7 @@ router
   .route("/movies")
   .get(function (req, res) {})
 
-  .post(function (req, res) {
+  .post(jwtController.isAuthenticated, function (req, res) {
     if (!req.body.title || !req.body.year || !req.body.genre) {
       res.json({
         success: false,
