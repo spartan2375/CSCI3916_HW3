@@ -34,12 +34,11 @@ var movieSchema = new Schema({
     ],
   },
   actors: {
-    type: [
-      {
-        actorName: String,
-        CharacterName: String,
-      },
-    ],
+    type: Array,
+    items: {
+      actorName: String,
+      CharacterName: String,
+    },
     required: true,
   },
 });
