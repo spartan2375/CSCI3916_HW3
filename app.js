@@ -66,7 +66,8 @@ router
       movie.year = req.body.year;
       movie.genre = req.body.genre;
       movie.actors = req.body.actors;
-
+      console.log(req.body);
+      movie.save();
       res.json({
         success: true,
         msg: "Successfully added (not really tho) movie to db",
