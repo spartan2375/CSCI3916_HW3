@@ -38,10 +38,16 @@ router
   .route("/movies")
   .get(jwtController.isAuthenticated, function (req, res) {
     if (!req.body.title) {
-      res.json({
-        success: false,
-        msg: "Request body MUST have a title.",
-      });
+      Movie.find()
+        .lean()
+        .exec(function (err, movies) {
+          res.type;
+          return res.json(movies);
+        });
+      //   res.json({
+      //     success: false,
+      //     msg: "Request body MUST have a title.",
+      //   });
     } else {
       Movie.findOne({ title: req.body.title }).exec(function (err, movie) {
         if (err) {
