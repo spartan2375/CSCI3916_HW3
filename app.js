@@ -33,6 +33,40 @@ function getJSONObject(req, msg) {
 }
 
 router
+  .route("/movies")
+  .get(function (req, res) {})
+
+  .post(function (req, res) {
+    if (!req.body.title || !req.body.year || !req.body.genre) {
+      res.json({
+        success: false,
+        msg: "Please include a title, year, and genre!",
+      });
+    } else if (
+      ![
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Mystery",
+        "Thriller",
+        "Western",
+      ].includes(req.body.genre)
+    ) {
+      res.json({
+        success: false,
+        msg: "Genre must be on of the following: Action, Adventure, Comedy, Drama, Fantasy, Horror, Mystery, Thriller, or Western!",
+      });
+    }
+  })
+
+  .put(function (req, res) {})
+
+  .delete(function (req, res) {});
+
+router
   .route("/signup")
   .post(function (req, res) {
     if (!req.body.username || !req.body.password) {
