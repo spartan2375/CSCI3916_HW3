@@ -59,6 +59,11 @@ router
         success: false,
         msg: "Genre must be on of the following: Action, Adventure, Comedy, Drama, Fantasy, Horror, Mystery, Thriller, or Western!",
       });
+    } else {
+      res.json({
+        success: true,
+        msg: "Successfully added (not really tho) movie to db",
+      });
     }
   })
 
