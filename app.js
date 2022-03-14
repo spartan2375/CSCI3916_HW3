@@ -7,6 +7,7 @@ var jwt = require("jsonwebtoken");
 var cors = require("cors");
 var exp = require("constants");
 var User = require("./users");
+var Movie = require("./movies");
 
 var app = express();
 app.use(cors());
