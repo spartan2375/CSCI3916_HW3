@@ -1,6 +1,7 @@
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 var bcrypt = require("bcrypt-nodejs");
+require("dotenv").config();
 
 mongoose.Promise = global.Promise;
 
@@ -8,12 +9,13 @@ try {
   mongoose.connect(
     process.env.DB,
     { useNewUrlParser: true, useUnifiedTopology: true },
-    () => console.log("connected")
+    () => console.log("connected to users collection")
   );
 } catch (error) {
-  console.log("could not connect");
+  console.log(error);
+  console.log("could not connect to users collection");
 }
-// mongoose.set("useCreateIndex", true);
+// mongoose.set("useCreateIndex", true); google said this was deprecated
 
 //create user schema
 var userSchema = new Schema({

@@ -8,6 +8,7 @@ var cors = require("cors");
 var exp = require("constants");
 var User = require("./users");
 var Movie = require("./movies");
+const { title } = require("process");
 
 var app = express();
 app.use(cors());
@@ -35,7 +36,35 @@ function getJSONObject(req, msg) {
 
 router
   .route("/movies")
-  .get(function (req, res) {})
+  .get(jwtController.isAuthenticated, function (req, res) {
+    if (!req.body.title) {
+      res.json({
+        success: false,
+        msg: "Request body MUST have a title.",
+      });
+    } else {
+      Movie.findOne({ title: req.body.title }).exec(function (err, movie) {
+        if (err) {
+          res.send(err);
+        } else
+          try {
+            res.json({
+              success: true,
+              title: movie.title,
+              year: movie.year,
+              genre: movie.genre,
+              actors: movie.actors,
+            });
+          } catch (e) {
+            console.log(e);
+            res.json({
+              success: false,
+              msg: "Movie not found!",
+            });
+          }
+      });
+    }
+  })
 
   .post(jwtController.isAuthenticated, function (req, res) {
     if (!req.body.title || !req.body.year || !req.body.genre) {
@@ -60,6 +89,11 @@ router
         success: false,
         msg: "Genre must be on of the following: Action, Adventure, Comedy, Drama, Fantasy, Horror, Mystery, Thriller, or Western!",
       });
+    } else if (req.body.actors.length < 3) {
+      res.json({
+        success: false,
+        msg: "Request must include at least three actors and their characters",
+      });
     } else {
       var movie = new Movie();
       movie.title = req.body.title;
@@ -70,14 +104,77 @@ router
       movie.save();
       res.json({
         success: true,
-        msg: "Successfully added (not really tho) movie to db",
+        msg: `Successfully added ${movie.title} to the collection!`,
       });
     }
   })
 
-  .put(function (req, res) {})
+  .put(jwtController.isAuthenticated, function (req, res) {
+    if (!req.body.title)
+      res.json({
+        success: false,
+        msg: "Title required for update call!",
+      });
+    else {
+      Movie.findOne({ title: req.body.title }).exec(function (err, movie) {
+        if (err) {
+          res.send(err);
+        } else {
+          movie.title = req.body.title;
+          movie.year = req.body.year;
+          movie.genre = req.body.genre;
+          movie.actors = req.body.actors;
 
-  .delete(function (req, res) {});
+          movie.save(function (err) {
+            if (err) {
+              res.send(err);
+            } else {
+              res.json({
+                success: true,
+                msg: "Movie updated!",
+                title: movie.title,
+                year: movie.year,
+                genre: movie.genre,
+                actors: movie.actors,
+              });
+            }
+          });
+        }
+      });
+    }
+  })
+
+  .delete(jwtController.isAuthenticated, function (req, res) {
+    if (!req.body.title) {
+      res.json({
+        success: false,
+        msg: "Request body MUST have a title.",
+      });
+    } else {
+      Movie.findOneAndDelete({ title: req.body.title }).exec(function (
+        err,
+        movie
+      ) {
+        if (err) res.send(err);
+        else
+          try {
+            res.json({
+              success: true,
+              deleted: true,
+              title: movie.title,
+              year: movie.year,
+              genre: movie.genre,
+              actors: movie.actors,
+            });
+          } catch (error) {
+            res.json({
+              success: false,
+              msg: "Movie not found!",
+            });
+          }
+      });
+    }
+  });
 
 router
   .route("/signup")
@@ -148,63 +245,12 @@ router
     });
   });
 
-// router
-//   .route("/movies")
-
-//   .get(function (req, res) {
-//     res = res.status(200);
-//     if (req.get("Content-Type")) {
-//       res = res.type(req.get("Content-Type"));
-//     }
-
-//     var object = getJSONObject(req, "GET movies");
-//     res.json(object);
-//   })
-
-//   .post(function (req, res) {
-//     res = res.status(200);
-//     if (req.get("Content-Type")) {
-//       res = res.type(req.get("Content-Type"));
-//     }
-
-//     var object = getJSONObject(req, "movie saved");
-//     res.json(object);
-//   })
-
-//   .delete(authController.isAuthenticated, function (req, res) {
-//     console.log(req.body);
-//     res = res.status(200);
-//     if (req.get("Content-Type")) {
-//       res = res.type(req.get("Content-Type"));
-//     }
-
-//     var object = getJSONObject(req, "movie deleted");
-//     res.json(object);
-//   })
-//   .put(jwtController.isAuthenticated, function (req, res) {
-//     console.log(req.body);
-//     res = res.status(200);
-//     if (req.get("Content-Type")) {
-//       res = res.type(req.get("Content-Type"));
-//     }
-
-//     var object = getJSONObject(req, "movie updated");
-//     res.json(object);
-//   })
-
-//   .all(function (req, res) {
-//     res.json({
-//       success: false,
-//       msg: "Request type must be one of the following: GET, POST, PUT, or DELETE.",
-//     });
-//   });
-
-// router.route("/").all(function (req, res) {
-//   res = res.status(401).send({
-//     success: false,
-//     msg: "Request cannot be made to base address.",
-//   });
-// });
+router.route("/").all(function (req, res) {
+  res = res.status(401).send({
+    success: false,
+    msg: "Request cannot be made to base address.",
+  });
+});
 
 app.use("/", router);
 app.listen(port, () => console.log(`Listening on port ${port}!`));
