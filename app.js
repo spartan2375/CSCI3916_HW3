@@ -61,6 +61,12 @@ router
         msg: "Genre must be on of the following: Action, Adventure, Comedy, Drama, Fantasy, Horror, Mystery, Thriller, or Western!",
       });
     } else {
+      var movie = new Movie();
+      movie.title = req.body.title;
+      movie.year = req.body.year;
+      movie.genre = req.body.genre;
+      movie.actors = req.body.actors;
+
       res.json({
         success: true,
         msg: "Successfully added (not really tho) movie to db",
@@ -95,7 +101,7 @@ router
             });
           else return res.json(err);
         }
-
+        console.log(req.body);
         res.json({ success: true, msg: "Successfully created new user." });
       });
     }
