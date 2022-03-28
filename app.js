@@ -37,7 +37,7 @@ function getJSONObject(req, msg) {
 router
   .route("/movies")
   .get(jwtController.isAuthenticated, function (req, res) {
-    if (!req.body.title) {
+    if (!req.params.title){//.body.title) {
       Movie.find()
         .lean()
         .exec(function (err, movies) {
