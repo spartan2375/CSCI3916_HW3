@@ -49,7 +49,7 @@ router
       //     msg: "Request body MUST have a title.",
       //   });
     } else {
-      Movie.findOne({ title: req.body.title }).exec(function (err, movie) {
+      Movie.findOne({ title: req.params.title }).exec(function (err, movie) {
         if (err) {
           res.send(err);
         } else
@@ -71,6 +71,43 @@ router
       });
     }
   })
+
+  // .route("/movies/:title=")
+  // .get(jwtController.isAuthenticated, function (req, res) {
+  //   if (!req.params.title){//.body.title) {
+  //     Movie.find()
+  //       .lean()
+  //       .exec(function (err, movies) {
+  //         res.type;
+  //         return res.json(movies);
+  //       });
+  //     //   res.json({
+  //     //     success: false,
+  //     //     msg: "Request body MUST have a title.",
+  //     //   });
+  //   } else {
+  //     Movie.findOne({ title: req.body.title }).exec(function (err, movie) {
+  //       if (err) {
+  //         res.send(err);
+  //       } else
+  //         try {
+  //           res.json({
+  //             success: true,
+  //             title: movie.title,
+  //             year: movie.year,
+  //             genre: movie.genre,
+  //             actors: movie.actors,
+  //           });
+  //         } catch (e) {
+  //           console.log(e);
+  //           res.json({
+  //             success: false,
+  //             msg: "Movie not found!",
+  //           });
+  //         }
+  //     });
+  //   }
+  // })
 
   .post(jwtController.isAuthenticated, function (req, res) {
     if (!req.body.title || !req.body.year || !req.body.genre) {
