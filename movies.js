@@ -33,14 +33,13 @@ var movieSchema = new Schema({
       "Western",
     ],
   },
-  actors: {
-    type: Array,
-    items: {
+  actors: [
+    {
       actorName: String,
       CharacterName: String,
     },
-    required: true,
-  },
+  ],
+  required: true,
 });
 
 // movieSchema.pre("save", function (next) {
